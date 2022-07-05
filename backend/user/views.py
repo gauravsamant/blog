@@ -3,13 +3,15 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model, login
 from django.forms import ValidationError
 from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
+from knox.models import AuthToken as Token
+from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.generics import GenericAPIView
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from .serializers import SiteUserSerializer, LoginSerializer, RegisterSerializer
+from knox.views import LoginView
+from .serializers import SiteUserSerializer, RegisterSerializer
 
 User = get_user_model()
 
@@ -28,34 +30,45 @@ class UserViewSet(viewsets.ModelViewSet):
             raise e
 
 
-class LoginAPIView(APIView):
+class LoginAPIView(LoginView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def post(self, request, *args, **kwargs):
-
         data = {}
-        username = request.data['username']
-        password = request.data['password']
-        try:
-            user = User.objects.get(Q(email=username) | Q(username=username))
-        except BaseException as e:
-            raise ValidationError({"400": f'{str(e)}'})
-        token = Token.objects.get_or_create(user=user)[0].key
-        if not check_password(password, user.password):
-            raise ValidationError({"message": "Incorrect Login credentials"})
+        serializer = AuthTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        print("Serializer :", serializer.data)
+        user = serializer.validated_data['user']
+        print("User :", user.first_name)
+        request.user = user
+        # username = request.data['username']
+        # password = request.data['password']
+        # try:
+        #     user = User.objects.get(Q(email=username) | Q(username=username))
+        # except BaseException as e:
+            # raise ValidationError({"400": f'{str(e)}'})
+        # serializer = SiteUserSerializer(data=user)
+        # if serializer.is_valid():
+        #     user = serializer.validated_data[user]
+        return super(LoginAPIView, self).post(request, format=None)
+# ************************************************************************************
+        # token = Token.objects.get_or_create(user=user)[0].key
+        # if not check_password(password, user.password):
+        #     raise ValidationError({"message": "Incorrect Login credentials"})
 
-        if user:
-            if user.is_active:
-                login(request, user)
-                data["message"] = "user logged in"
-                data["email_address"] = user.email
-                Res = {"data": data, "token": token}
-                return Response(Res)
-            else:
-                raise ValidationError({"400": f'user not active'})
-        else:
-            raise ValidationError({"400": f'user doesnt exist'})
+        # if user:
+        #     if user.is_active:
+        #         login(request, user)
+        #         data["message"] = "user logged in"
+        #         data["email_address"] = user.email
+        #         Res = {"data": data, "token": token}
+        #         return Response(Res)
+        #     else:
+        #         raise ValidationError({"400": f'user not active'})
+        # else:
+        #     raise ValidationError({"400": f'user doesnt exist'})
+# *************************************************************************************
         # import base64
         # print(request.data)
         # print(str(base64.b64decode(request.headers['Authorization'].split(" ")[1])).split(":")[0])

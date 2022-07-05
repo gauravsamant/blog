@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',
+    'knox',
     'user',
     'post',
 ]
@@ -59,13 +60,24 @@ AUTH_USER_MODEL = "user.SiteUser"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
+        'knox.auth.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASS': [
         'rest_framework.permissions.IsAuthenticated',
     ]
+}
+
+REST_KNOX = {
+  'SECURE_HASH_ALGORITHM': 'cryptography.hazmat.primitives.hashes.SHA512',
+  'AUTH_TOKEN_CHARACTER_LENGTH': 64,
+#   'TOKEN_TTL': timedelta(hours=10),
+  'USER_SERIALIZER': 'user.serializers.SiteUserSerializer',
+  'TOKEN_LIMIT_PER_USER': None,
+  'AUTO_REFRESH': False,
+#   'EXPIRY_DATETIME_FORMAT': api_settings.DATETME_FORMAT,
 }
 
 TEMPLATES = [
