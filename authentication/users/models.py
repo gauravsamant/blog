@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.contrib import auth
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
@@ -213,8 +213,15 @@ class UserManager(BaseUserManager):
 
         return self._create_user(username, email, password, **extra_fields)
 
-    # def get_by_natural_key(self, username):
-    #     return self.get(**{self.model.USERNAME_FIELD: username})
+    def get_by_natural_key(self, username):
+        return self.get(**{self.model.USERNAME_FIELD: username})
+
+    def get_queryset(self):
+        qs = super(UserManager, self).get_queryset()
+        # print(qs.first().id)
+        # email = Email.objects.filter(user=qs.first().id)
+        # contact = ContactNumber.objects.filter(user=qs.first().id)
+        return qs
 
 
 # def with_perm(
@@ -371,3 +378,6 @@ class ContactNumber(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="user_contact"
     )
+
+
+# 1011128525
