@@ -3,15 +3,16 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.viewsets import ModelViewSet
-from rest_framework import permissions
+from rest_framework import permissions, authentication
 from .serializers import UserLoginSerializer, EmailSerializer, ContactNumberSerializer
 from .models import User, Email, ContactNumber
 
 
 class UserApiView(ListCreateAPIView):
 
+    # authentication_classes = [permissions.IsAuthenticated]
     authentication_classes = []
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     lookup_field = "username"
 
@@ -20,12 +21,14 @@ class UserApiView(ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         username = kwargs.get("username")
-        data = User.objects.annotate(
-            email=F("user_email__email"), contact=F("user_contact__contact_number")
-        ).filter(username=username)
+        try:
+            data = User.objects.annotate(
+                email=F("user_email__email"), contact=F("user_contact__contact_number")
+            ).filter(username=username)
+        except User.DoesNotExist:
+            return Response("User does not exist")
 
         self.serializer = UserLoginSerializer(data, many=True)
-        print(self.serializer.data)
         return Response(self.serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
