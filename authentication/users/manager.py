@@ -58,7 +58,11 @@ class UserManager(BaseUserManager):
         return self._create_user(username, email, password, **extra_fields)
 
     def get_by_natural_key(self, username):
-        return self.get(**{self.model.USERNAME_FIELD: username})
+        return self.get(
+            Q(**{self.model.USERNAME_FIELD: username})
+            | Q(**{self.model.user_email__email: username})
+            | Q(**{self.model.user_contact__contactnumber: username})
+        )
 
 
 # def with_perm(

@@ -1,0 +1,27 @@
+version: "3.9"  # optional since v1.27.0
+services:
+    rabbitmq3:
+        container_name: "rabbitmq"
+        image: rabbitmq:3.11.0-management-alpine
+        environment:
+            - RABBITMQ_DEFAULT_USER=guest
+            - RABBITMQ_DEFAULT_PASS=guest
+        ports:
+            # AMQP protocol port
+            - '5672:5672'
+            # HTTP management UI
+            - '15672:15672'
+# services:
+#   web:
+#     build: .
+#     ports:
+#       - "8000:5000"
+#     volumes:
+#       - .:/code
+#       - logvolume01:/var/log
+#     depends_on:
+#       - redis
+#   redis:
+#     image: redis
+# volumes:
+#   logvolume01: {}
